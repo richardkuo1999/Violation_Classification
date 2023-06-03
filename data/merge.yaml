@@ -1,0 +1,25 @@
+train: 
+    - F:/dataset/BDD100k_10k/images/train               # image
+    - F:/dataset/BDD100k_10k/labels/bdd_Object_gt/train # Object Detection
+    - F:/dataset/BDD100k_10k/labels/bdd_seg_gt/train    # Drivable Area Detection
+    - F:/dataset/BDD100k_10k/labels/bdd_lane_gt_muti/train   # Lane Detection
+val: 
+    - F:/dataset/BDD100k_10k/images/val               # image
+    - F:/dataset/BDD100k_10k/labels/bdd_Object_gt/val # object detection
+    - F:/dataset/BDD100k_10k/labels/bdd_seg_gt/val    # Drivable Area Detection
+    - F:/dataset/BDD100k_10k/labels/bdd_lane_gt_muti/val   # Lane Detection
+
+merge: {
+        'car'   :['car','truck','bus', 'motor','rider'],
+        }
+# class names
+Det_names: ['car'] # no train
+
+Lane_names: {
+             'background'    : [  0,   0,   0], ## 'background' is need
+             'lane' : [255,255, 255]
+            }
+DriveArea_names: {
+                  'background'    : [  0,   0,   0], ## 'background' is need
+                  'drivable' : [127,127, 127]
+                 }

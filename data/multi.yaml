@@ -1,0 +1,45 @@
+train: 
+    - ./dataset/train/images  
+    - ./dataset/train/DriveArea 
+    - ./dataset/train/laneline   
+    - ./dataset/train/object   
+val: 
+    - ./dataset/val/images  
+    - ./dataset/val/DriveArea 
+    - ./dataset/val/laneline   
+    - ./dataset/val/object   
+
+# class names
+# Det_names: ['car','truck','bus','motor','rider','person', 'traffic sign','traffic light'] # no train
+
+Lane_names: {
+             'background'          :  [0,0,0],
+             'box junction'        :  [255,242,0],
+             'crosswalk'           :  [34,117,76],
+             'stop line'           :  [61,72,204],
+             'solid single white'  :  [237,28,36],
+             'solid single yellow' :  [163,73,164],
+             'solid single red'    :  [185,122,87],
+             'solid double white'  :  [136,0,21],
+             'solid double yellow' :  [112,146,190],
+             'dashed single white' :  [181,230,29],
+             'dashed single yellow':  [153,217,234],
+                'left arrow'          :  [158,159,76],
+                'straight arrow'      :  [121,138,134],
+                'right arrow'         :  [41,64,96],
+                'left straght arrow'  :  [7,102,146],
+                'right straght arrow' :  [247,153,255],
+             'channelizing line'   :  [255,204,153],
+                'motor prohibited'    :  [155,255,153],
+                'slow'                :  [255,153,173],
+             'motor priority lane' :  [230,224,147],
+             'motor waiting zone'  :  [35,27,87],
+                'left turn box'       :  [193,158,155],
+                'motor icon'          :  [109,29,78],
+                'bike icon'           :  [3,164,204],
+             'parking lot'         :  [175,157,185]
+            }
+DriveArea_names: {
+                  'background'    : [  0,   0,   0], ## 'background' is need
+                  'drivable' : [127,127, 127]
+                 }
