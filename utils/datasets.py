@@ -156,7 +156,7 @@ class MyDataset(Dataset):
         drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device).cpu()
         lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device).cpu()
 
-        self.segement_debug(img, drivable_label, lane_label, idx, data)
+        # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
         img = self.transform(img)
         input = (img, lane_label, drivable_label)
@@ -266,8 +266,12 @@ class LoadImages:  # for inference
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         h0, w0 = img.shape[:2]  # orig hw
 
-        drivable_label = read_image(data["DriveArea"],ImageReadMode.RGB)[:3].to(self.device)
-        lane_label = read_image(data["lane"],ImageReadMode.RGB)[:3].to(self.device)
+        drivable_label = cv2.imread(data["DriveArea"], cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
+        drivable_label = cv2.cvtColor(drivable_label, cv2.COLOR_BGR2RGB)
+        drivable_label = torch.tensor(drivable_label).to(self.device).permute(2,0,1)
+        lane_label = cv2.imread(data["lane"], cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
+        lane_label = cv2.cvtColor(lane_label, cv2.COLOR_BGR2RGB)
+        lane_label = torch.tensor(lane_label).to(self.device).permute(2,0,1)
 
         #resize
         (img, drivable_label, lane_label), ratio, pad = letterbox((img, drivable_label, lane_label),\
