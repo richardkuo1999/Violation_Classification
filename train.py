@@ -239,7 +239,7 @@ def parse_args():
     parser.add_argument('--val_freq', type=int, default=5, 
                             help='How many epochs do one time validation')
 
-    parser.add_argument('--img_size', nargs='+', type=int, default=[640, 640], 
+    parser.add_argument('--img_size', nargs='+', type=int, default=[256, 256], 
                             help='[train, test] image sizes')
 
    
