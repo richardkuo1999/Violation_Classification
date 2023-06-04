@@ -36,9 +36,11 @@ def test(epoch, args, hyp, val_loader, model, criterion, output_dir,
 
     # switch to train mode
     model.eval()
-    for batch_i, (image, bbox, target, paths, shapes) in enumerate(tqdm(val_loader)):
-
+    for batch_i, (input, bbox, target, paths, shapes) in enumerate(tqdm(val_loader)):
+        image, laneline, drivable = input
         image = image.to(device, non_blocking=True)
+        laneline = laneline.to(device, non_blocking=True)
+        drivable = drivable.to(device, non_blocking=True)
         bbox = bbox.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 
@@ -46,7 +48,7 @@ def test(epoch, args, hyp, val_loader, model, criterion, output_dir,
             pad_w, pad_h = shapes[0][1][1]
             pad_w, pad_h = int(pad_w), int(pad_h)
             t = time_synchronized()
-            outputs = model(image, bbox)
+            outputs = model(image, laneline, drivable, bbox)
             t_inf = time_synchronized() - t
 
 
