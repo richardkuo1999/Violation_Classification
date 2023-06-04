@@ -11,16 +11,11 @@ from prefetch_generator import BackgroundGenerator
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-# from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
+from torchvision.io import read_image, ImageReadMode
 
-# from general import one_hot_it_v11_dice
-# from augmentations import augment_hsv, random_perspective, letterbox,\
-#                                  letterbox_for_img
 from utils.general import one_hot_it_v11_dice
-from utils.augmentations import augment_hsv, random_perspective, letterbox,\
-                                 letterbox_for_img
-
+from utils.augmentations import letterbox
 
 def create_dataloader(args, hyp, data_dict, batch_size, normalize, is_train=True, shuffle=True):
     normalize = transforms.Normalize(
@@ -144,13 +139,10 @@ class MyDataset(Dataset):
         img = cv2.imread(data["image"], cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         h0, w0 = img.shape[:2]  # orig hw
-        # img = torch.tensor(img)
 
-        drivable_label = cv2.imread(data["DriveArea"])
-        drivable_label = cv2.cvtColor(drivable_label, cv2.COLOR_BGR2RGB)
+        drivable_label = read_image(data["DriveArea"],ImageReadMode.RGB)[:3].to(self.device)
+        lane_label = read_image(data["lane"],ImageReadMode.RGB)[:3].to(self.device)
 
-        lane_label = cv2.imread(data["lane"])
-        lane_label = cv2.cvtColor(lane_label, cv2.COLOR_BGR2RGB)
         #resize
         (img, drivable_label, lane_label), ratio, pad = letterbox((img, drivable_label, lane_label),\
                                          resized_shape, auto=False, scaleup=self.is_train)
@@ -162,8 +154,6 @@ class MyDataset(Dataset):
 
         # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
-        # drivable_label = self.Tensor(drivable_label)
-        # lane_label = self.Tensor(lane_label)
         img = self.transform(img)
         input = torch.cat((img, lane_label, drivable_label), 0)
 
@@ -267,43 +257,22 @@ class LoadImages:  # for inference
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         h0, w0 = img.shape[:2]  # orig hw
 
-        drivable_label = cv2.imread(data["DriveArea"])
-
-        lane_label = cv2.imread(data["lane"])
-        lane_label = cv2.cvtColor(lane_label, cv2.COLOR_BGR2RGB)
+        drivable_label = read_image(data["DriveArea"],ImageReadMode.RGB)[:3].to(self.device)
+        lane_label = read_image(data["lane"],ImageReadMode.RGB)[:3].to(self.device)
 
         #resize
         (img, drivable_label, lane_label), ratio, pad = letterbox((img, drivable_label, lane_label),\
                                          resized_shape, auto=False)
         h, w = img.shape[:2]
 
-        # Convert
-        # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
-        # img = img.transpose(2, 0, 1)
-        img = np.ascontiguousarray(img)
-        # drivable_label = np.ascontiguousarray(drivable_label)
-        # if idx == 0:
-        #     print(drivable_label[:,:,0])
 
 
-        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info)
-        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info)
 
-        # from PIL import Image
-        # aaa = img.copy()
-        # drivable_label_bool = drivable_label.copy().astype(dtype=bool)
-        # for i in range(1,len(drivable_label_bool[0,0])):
-        #     aaa[drivable_label_bool[:,:,i]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
+        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info).cpu()
+        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info).cpu()
 
-        # lane_label_bool = lane_label.copy().astype(dtype=bool)
-        # for i in range(1,len(lane_label_bool[0,0])):
-        #     aaa[lane_label_bool[:,:,i]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
-        # aaa = Image.fromarray(aaa, "RGB")
-        # aaa.save(f'{idx}.png')
-        # cv2.imwrite(f'{idx}.jpg',img)
+        # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
-        drivable_label = self.Tensor(drivable_label)
-        lane_label = self.Tensor(lane_label)
         img = self.transform(img)
         input = torch.cat((img, lane_label, drivable_label), 0)
 
@@ -311,6 +280,23 @@ class LoadImages:  # for inference
         bbox = data["xywh"]
 
         return input, bbox, data["image"], shapes
+    def segement_debug(self, img, drivable_label, lane_label, idx, data):
+        aaa = np.zeros(img.shape,dtype=img.dtype)
+        drivable_label_bool = drivable_label.clone().numpy().astype(dtype=bool)
+        for i in range(1,len(drivable_label_bool)):
+            aaa[drivable_label_bool[i,:,:]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
+        
+        lane_label_bool = lane_label.clone().numpy().astype(dtype=bool)
+        for i in range(1,len(lane_label_bool)):
+            aaa[lane_label_bool[i,:,:]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
+
+        aaa = cv2.cvtColor(aaa, cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(f'runs/{idx}.png',aaa)
+        cv2.imwrite(f'runs/{idx}_.png',img)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        lane_label.to(self.device)
+        drivable_label.to(self.device)
 
     # TODO collate_fn
     @staticmethod

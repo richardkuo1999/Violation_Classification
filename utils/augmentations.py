@@ -3,8 +3,8 @@ import math
 import random
 import numpy as np
 
-import torchvision.transforms as transforms
-from torchvision.transforms.functional import InterpolationMode
+from torchvision.transforms import Resize,InterpolationMode
+import torch.nn.functional as F
 
 def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
     """change color hue, saturation, value"""
@@ -153,30 +153,30 @@ def letterbox(combination, new_shape=(640, 640), color=(114, 114, 114), auto=Fal
         r = min(r, 1.0)
 
     # Compute padding
-    ratio = r, r  # width, height ratios
-    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
-    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+    ratio = r, r  # height, width ratios
+    new_unpad = int(round(shape[0] * r)), int(round(shape[1] * r))
+    dh, dw = new_shape[0] - new_unpad[0], new_shape[1] - new_unpad[1]  # wh padding
     if auto:  # minimum rectangle
         dw, dh = np.mod(dw, 32), np.mod(dh, 32)  # wh padding
     elif scaleFill:  # stretch
         dw, dh = 0.0, 0.0
-        new_unpad = (new_shape[1], new_shape[0])
-        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+        new_unpad = (new_shape[0], new_shape[1])
+        ratio = new_shape[0] / shape[0], new_shape[1] / shape[1]  # width, height ratios
 
     dw /= 2  # divide padding into 2 sides
     dh /= 2
 
-    if shape[::-1] != new_unpad:  # resize
-        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
-        seg_label = cv2.resize(seg_label, new_unpad, interpolation=cv2.INTER_NEAREST)
-        lane_label = cv2.resize(lane_label, new_unpad, interpolation=cv2.INTER_NEAREST)
+    if shape[::1] != new_unpad:  # resize
+        img = cv2.resize(img, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
+        seg_label = Resize(new_unpad,InterpolationMode.BILINEAR, antialias=True)(seg_label)
+        lane_label = Resize(new_unpad,InterpolationMode.BILINEAR, antialias=True)(lane_label)
 
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
 
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-    seg_label = cv2.copyMakeBorder(seg_label, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)  # add border
-    lane_label = cv2.copyMakeBorder(lane_label, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)  # add border
+    seg_label = F.pad(seg_label, (left, right, top, bottom), value=0)  # add border
+    lane_label = F.pad(lane_label, (left, right, top, bottom), value=0)  # add border
     # print(img.shape)
     
     combination = (img, seg_label, lane_label)

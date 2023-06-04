@@ -83,17 +83,14 @@ def increment_path(path, exist_ok=True, sep=''):
 
 def one_hot_it_v11_dice(label, label_info, device):
     # return semantic_map -> [H, W, class_num]
-    height, width, _ = label.shape
+    _, height, width, = label.shape
     class_num = len(label_info)
-    label = torch.tensor(label).to(device)
 
-    # semantic_map = np.zeros((height, width, class_num), dtype=np.float32)
     semantic_map = torch.zeros((class_num, height, width), dtype=torch.float32, device=device)
     for index, info in enumerate(label_info):
         if index == 0: continue
-        # color = label_info[info][:3]
-        color = torch.tensor(label_info[info][:3]).to(device)
-        equality = torch.all(torch.eq(label, color), axis=-1)
+        color = torch.tensor(label_info[info][:3]).to(device).unsqueeze(-1).unsqueeze(-1)
+        equality = torch.all(torch.eq(label, color), axis=0)
         semantic_map[index, ...] = equality.float()
     return semantic_map
 
