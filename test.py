@@ -57,6 +57,7 @@ def test(epoch, args, hyp, val_loader, model, criterion, output_dir,
             losses.update(loss.item(), image.size(0))
         
         outputs = torch.argmax(outputs, dim=1)
+        target = torch.argmax(target, dim=1)
         metric.addBatch(outputs.cpu(), target.cpu())
 
 
