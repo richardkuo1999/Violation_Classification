@@ -155,7 +155,7 @@ class MyDataset(Dataset):
         # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
         img = self.transform(img)
-        input = torch.cat((img, lane_label, drivable_label), 0)
+        input = (img, lane_label, drivable_label)
 
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         return input, data["xywh"], data["label"], data["image"], shapes
@@ -185,8 +185,13 @@ class MyDataset(Dataset):
     @staticmethod
     def collate_fn(batch):
         input, bbox, target, paths, shapes= zip(*batch)
-        print
-        return torch.stack(input, 0), torch.stack(bbox, 0), torch.stack(target, 0), paths, shapes
+        image, lane, drivable = [], [], []
+        for  l in input:
+            image.append(l[0])
+            lane.append(l[1])
+            drivable.append(l[2])
+        return [torch.stack(image, 0), torch.stack(lane, 0), torch.stack(drivable, 0)], \
+                            torch.stack(bbox, 0), torch.stack(target, 0), paths, shapes
 
 
 
@@ -274,7 +279,7 @@ class LoadImages:  # for inference
         # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
         img = self.transform(img)
-        input = torch.cat((img, lane_label, drivable_label), 0)
+        input = (img, lane_label, drivable_label)
 
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         bbox = data["xywh"]

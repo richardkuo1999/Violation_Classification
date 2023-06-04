@@ -53,7 +53,7 @@ def main(args, hyp, device, writer):
         data_dict = yaml.load(f, Loader=yaml.SafeLoader)  # data dict
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    hyp.update({'nc':[len(DriveArea_class), len(Lane_class)]})
+    hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 
@@ -67,8 +67,9 @@ def main(args, hyp, device, writer):
     # build up model
     print("begin to build up model...")
 
-    ch = hyp['nc'][0] + hyp['nc'][1] +3
-    model = build_model(ch=ch, num_classes=2).to(device)
+
+    model = build_model(ch=hyp['nc'], num_classes=2, 
+                            tokensize=32).to(device)
 
     # loss function 
     criterion = Loss(hyp, device).to(device)
@@ -114,7 +115,8 @@ def main(args, hyp, device, writer):
 
         model.train()
         start = time.time()
-        for i, (image, bbox, target, paths, shapes) in enumerate(train_loader, start=1):
+        for i, (input, bbox, target, paths, shapes) in enumerate(train_loader, start=1):
+            image, laneline, drivable = input
             num_iter = i + num_batch * (epoch - 1)
 
             if num_iter < num_warmup:
@@ -137,12 +139,14 @@ def main(args, hyp, device, writer):
                         
             data_time.update(time.time() - start)
             image = image.to(device, non_blocking=True)
+            laneline = laneline.to(device, non_blocking=True)
+            drivable = drivable.to(device, non_blocking=True)
             bbox = bbox.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
 
             # Forward
             with amp.autocast(enabled=device.type != 'cpu'):
-                outputs = model(image, bbox)
+                outputs = model(image, laneline, drivable, bbox)
                 loss = criterion(outputs, target)
 
             # compute gradient and do update step

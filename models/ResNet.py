@@ -10,7 +10,7 @@ class ResNet(nn.Module):
       self.in_channels = 16
       self.conv = nn.Conv2d(ch, 16, kernel_size=3, stride=1, padding=1, bias=False)
       self.bn = nn.BatchNorm2d(16)
-      self.layer1 = self.make_layer(16, 3, stride=2) # 1
+      self.layer1 = self.make_layer(16, 3, stride=1)
       self.layer2 = self.make_layer(32, 3, stride=2)
       self.layer3 = self.make_layer(64, 3, stride=2)
       self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -52,18 +52,23 @@ class MLPModel(nn.Module):
 
 
 class ResNetMLPModel(nn.Module):
-    def __init__(self, ch=14, num_classes=10):
+    def __init__(self, ch=[25,2], num_classes=2, tokensize=32):
         super(ResNetMLPModel, self).__init__()
-        self.resnet_model = ResNet(ch, num_classes)
-        self.mlp_model = MLPModel(num_classes)
-        self.fc = nn.Linear(num_classes*2, num_classes)  # 將兩個特徵向量合併進行分類
+        self.img_model = ResNet(3, tokensize)
+        self.lane_model = ResNet(ch[0], tokensize)
+        self.drive_model = ResNet(ch[1], tokensize)
+        self.mlp_model = MLPModel(tokensize)
+        self.fc = nn.Linear(tokensize*4, num_classes)  # 將兩個特徵向量合併進行分類
         self.Softmax = nn.Softmax(dim=1)
 
-    def forward(self, image, numbers):
+    def forward(self, image, laneline, drivable, bbox):
 
-        resnet_features = self.resnet_model(image)
-        mlp_features = self.mlp_model(numbers)
+        image_features = self.img_model(image)
+        laneline_features = self.lane_model(laneline)
+        drivable_features = self.drive_model(drivable)
+        bbox_features = self.mlp_model(bbox)
         
-        combined_features = torch.cat((resnet_features, mlp_features), dim=1)
+        combined_features = torch.cat((image_features, laneline_features, 
+                            drivable_features, bbox_features), dim=1)
         output = self.fc(combined_features)
         return self.Softmax(output)
