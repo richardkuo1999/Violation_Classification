@@ -3,6 +3,8 @@ import math
 import random
 import numpy as np
 
+import torchvision.transforms as transforms
+from torchvision.transforms.functional import InterpolationMode
 
 def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
     """change color hue, saturation, value"""

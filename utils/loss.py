@@ -14,7 +14,7 @@ class Loss(nn.Module):
         weight = torch.tensor([1.5,0.5])
         # self.losses = nn.CrossEntropyLoss(weight=weight).to(device)
         # self.losses = nn.CrossEntropyLoss().to(device)
-        self.losses = nn.BCEWithLogitsLoss().to(device)
+        self.losses = nn.BCEWithLogitsLoss()
         # self.losses = nn.BCEWithLogitsLoss(pos_weight=weight).to(device)
         
 

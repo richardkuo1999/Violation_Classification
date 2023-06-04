@@ -22,7 +22,7 @@ from utils.augmentations import augment_hsv, random_perspective, letterbox,\
                                  letterbox_for_img
 
 
-def create_dataloader(args, hyp, data_dict, batch_size, normalize, is_train=True, shuffle=False):
+def create_dataloader(args, hyp, data_dict, batch_size, normalize, is_train=True, shuffle=True):
     normalize = transforms.Normalize(
             normalize['mean'], normalize['std']
         )
@@ -68,10 +68,9 @@ class MyDataset(Dataset):
         """
         self.hyp = hyp
         self.is_train = is_train
-        self.data_dict = data_dict
+        self.device = args.device
         self.transform = transform
         self.inputsize = args.img_size
-
         self.Tensor = transforms.ToTensor()
 
         # Data Root
@@ -79,6 +78,7 @@ class MyDataset(Dataset):
         self.DriveArea_root = Path(dataSet[1])
         self.laneline_root = Path(dataSet[2])
         self.object_root = Path(dataSet[3])
+        # Data class
         self.label_Lane_info = data_dict['Lane_names']
         self.label_drivable_info = data_dict['DriveArea_names']
 
@@ -144,80 +144,82 @@ class MyDataset(Dataset):
         img = cv2.imread(data["image"], cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         h0, w0 = img.shape[:2]  # orig hw
+        # img = torch.tensor(img)
 
         drivable_label = cv2.imread(data["DriveArea"])
+        drivable_label = cv2.cvtColor(drivable_label, cv2.COLOR_BGR2RGB)
 
         lane_label = cv2.imread(data["lane"])
         lane_label = cv2.cvtColor(lane_label, cv2.COLOR_BGR2RGB)
-
         #resize
         (img, drivable_label, lane_label), ratio, pad = letterbox((img, drivable_label, lane_label),\
                                          resized_shape, auto=False, scaleup=self.is_train)
         h, w = img.shape[:2]
 
-        if self.is_train:
-            combination = (img, drivable_label, lane_label)
-            (img, drivable_label, lane_label) = random_perspective(
-                combination=combination,
-                degrees=hyp['rot_factor'],
-                translate=hyp['translate'],
-                scale=hyp['scale_factor'],
-                shear=hyp['shear']
-            )
-            #print(labels.shape)
-            augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
-            # img, drivable_label, labels = cutout(combination=combination, labels=labels)
+        # if self.is_train:
+        #     combination = (img, drivable_label, lane_label)
+        #     (img, drivable_label, lane_label) = random_perspective(
+        #         combination=combination,
+        #         degrees=hyp['rot_factor'],
+        #         translate=hyp['translate'],
+        #         scale=hyp['scale_factor'],
+        #         shear=hyp['shear']
+        #     )
+        #     #print(labels.shape)
+        #     augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
+        #     # img, drivable_label, labels = cutout(combination=combination, labels=labels)
 
-            # random left-right flip
-            if random.random() < hyp['fliplr']:
-                img = np.fliplr(img)
-                drivable_label = np.fliplr(drivable_label)
-                lane_label = np.fliplr(lane_label)
+        #     # random left-right flip
+        #     if random.random() < hyp['fliplr']:
+        #         img = np.fliplr(img)
+        #         drivable_label = np.fliplr(drivable_label)
+        #         lane_label = np.fliplr(lane_label)
                 
-            # random up-down flip
-            if random.random() < hyp['flipud']:
-                img = np.flipud(img)
-                drivable_label = np.flipud(drivable_label)
-                lane_label = np.flipud(lane_label)
-        # Convert
-        # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
-        # img = img.transpose(2, 0, 1)
-        img = np.ascontiguousarray(img)
-        # drivable_label = np.ascontiguousarray(drivable_label)
-        # if idx == 0:
-        #     print(drivable_label[:,:,0])
+        #     # random up-down flip
+        #     if random.random() < hyp['flipud']:
+        #         img = np.flipud(img)
+        #         drivable_label = np.flipud(drivable_label)
+        #         lane_label = np.flipud(lane_label)
+        # # Convert
+        # # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
+        # # img = img.transpose(2, 0, 1)
+        # img = np.ascontiguousarray(img)
+        # # drivable_label = np.ascontiguousarray(drivable_label)
+        # # if idx == 0:
+        # #     print(drivable_label[:,:,0])
+        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device).cpu()
+        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device).cpu()
 
-        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info)
-        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info)
+        # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
-
-        # # from PIL import Image
-        # # aaa = img.copy()
-        # aaa = np.zeros(img.shape,dtype=img.dtype)
-        # drivable_label_bool = drivable_label.copy().astype(dtype=bool)
-        # for i in range(1,len(drivable_label_bool[0,0])):
-        #     aaa[drivable_label_bool[:,:,i]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
-
-        # lane_label_bool = lane_label.copy().astype(dtype=bool)
-        # for i in range(1,len(lane_label_bool[0,0])):
-        #     aaa[lane_label_bool[:,:,i]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
-        # aaa = cv2.cvtColor(aaa, cv2.COLOR_RGB2BGR)
-        # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        # cv2.imwrite(f'runs/{idx}.png',aaa)
-        # cv2.imwrite(f'runs/{idx}_.png',img)
-        # print(data["image"])
-        # print(data["DriveArea"])
-        # print(data["lane"])
-        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-
-        drivable_label = self.Tensor(drivable_label)
-        lane_label = self.Tensor(lane_label)
+        # drivable_label = self.Tensor(drivable_label)
+        # lane_label = self.Tensor(lane_label)
         img = self.transform(img)
         input = torch.cat((img, lane_label, drivable_label), 0)
 
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         return input, data["xywh"], data["label"], data["image"], shapes
+    
+    def segement_debug(self, img, drivable_label, lane_label, idx, data):
+        aaa = np.zeros(img.shape,dtype=img.dtype)
+        drivable_label_bool = drivable_label.clone().numpy().astype(dtype=bool)
+        for i in range(1,len(drivable_label_bool)):
+            aaa[drivable_label_bool[i,:,:]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
+        
+        lane_label_bool = lane_label.clone().numpy().astype(dtype=bool)
+        for i in range(1,len(lane_label_bool)):
+            aaa[lane_label_bool[i,:,:]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
+
+        aaa = cv2.cvtColor(aaa, cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(f'runs/{idx}.png',aaa)
+        cv2.imwrite(f'runs/{idx}_.png',img)
+        print(data["image"])
+        print(data["DriveArea"])
+        print(data["lane"])
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        lane_label.to(self.device)
+        drivable_label.to(self.device)
 
     # TODO collate_fn
     @staticmethod
@@ -345,7 +347,6 @@ class LoadImages:  # for inference
     def collate_fn(batch):
         input, bbox, paths, shapes= zip(*batch) 
         return torch.stack(input, 0), torch.stack(bbox, 0), paths, shapes
-
 
 
 

@@ -71,7 +71,7 @@ def main(args, hyp, device, writer):
     model = build_model(ch=ch, num_classes=2).to(device)
 
     # loss function 
-    criterion = Loss(hyp, device)
+    criterion = Loss(hyp, device).to(device)
 
     # Optimizer
     optimizer = get_optimizer(hyp, model)
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = args.cudnn_benchmark
     torch.backends.cudnn.deterministic = args.cudnn_deterministic
 
-    device = select_device(args.device, batch_size=args.batch_size)
+    args.device = select_device(args.device, batch_size=args.batch_size)
 
 
     # Hyperparameter
@@ -278,4 +278,4 @@ if __name__ == '__main__':
                                         ", view at http://localhost:6006/")
     writer = SummaryWriter(args.save_dir)  # Tensorboard
     
-    main(args, hyp, device, writer)
+    main(args, hyp, args.device, writer)
