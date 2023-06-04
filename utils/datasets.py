@@ -156,37 +156,7 @@ class MyDataset(Dataset):
                                          resized_shape, auto=False, scaleup=self.is_train)
         h, w = img.shape[:2]
 
-        # if self.is_train:
-        #     combination = (img, drivable_label, lane_label)
-        #     (img, drivable_label, lane_label) = random_perspective(
-        #         combination=combination,
-        #         degrees=hyp['rot_factor'],
-        #         translate=hyp['translate'],
-        #         scale=hyp['scale_factor'],
-        #         shear=hyp['shear']
-        #     )
-        #     #print(labels.shape)
-        #     augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
-        #     # img, drivable_label, labels = cutout(combination=combination, labels=labels)
 
-        #     # random left-right flip
-        #     if random.random() < hyp['fliplr']:
-        #         img = np.fliplr(img)
-        #         drivable_label = np.fliplr(drivable_label)
-        #         lane_label = np.fliplr(lane_label)
-                
-        #     # random up-down flip
-        #     if random.random() < hyp['flipud']:
-        #         img = np.flipud(img)
-        #         drivable_label = np.flipud(drivable_label)
-        #         lane_label = np.flipud(lane_label)
-        # # Convert
-        # # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
-        # # img = img.transpose(2, 0, 1)
-        # img = np.ascontiguousarray(img)
-        # # drivable_label = np.ascontiguousarray(drivable_label)
-        # # if idx == 0:
-        # #     print(drivable_label[:,:,0])
         drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device).cpu()
         lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device).cpu()
 

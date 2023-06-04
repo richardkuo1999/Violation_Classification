@@ -160,9 +160,9 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    device = select_device(args.device)
+    args.device = select_device(args.device)
 
     args.save_dir = increment_path(Path(args.logDir))  # increment run
-    main(args, device)
+    main(args, args.device)
 
     print("detect finish")

@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    device = select_device(args.device, batch_size=args.batch_size)
+    args.device = select_device(args.device, batch_size=args.batch_size)
 
 
     # Hyperparameter
@@ -180,6 +180,6 @@ if __name__ == '__main__':
         yaml.dump(vars(args), f, sort_keys=False)
 
     test(epoch, args, hyp, valid_loader, model, criterion, args.save_dir,
-              results_file, device=device)
+              results_file, device=args.device)
 
     print("test finish")
