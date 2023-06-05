@@ -15,6 +15,7 @@ class ClassifyMetric(object):
         self.labels = labels
         self.numClass = numClass
         self.confusionMatrix = np.zeros((self.numClass,)*2)
+        self.top1 = 0
         
     def genConfusionMatrix(self, y_true, y_pred):
         return confusion_matrix(y_true, y_pred, labels=self.labels)
@@ -31,8 +32,8 @@ class ClassifyMetric(object):
         return accuracy
 
     def precision(self):
-            precision = np.diag(self.confusionMatrix) / self.confusionMatrix.sum(axis=0)
-            return np.nan_to_num(precision)
+        precision = np.diag(self.confusionMatrix) / self.confusionMatrix.sum(axis=0)
+        return np.nan_to_num(precision)
 
     def recall(self):
         recall = np.diag(self.confusionMatrix) / self.confusionMatrix.sum(axis=1)
@@ -43,6 +44,10 @@ class ClassifyMetric(object):
         recall = self.recall()
         f1_score = 2 * (precision*recall) / (precision+recall)
         return np.nan_to_num(f1_score)
+    
+    def topk_accuracy(self, y_true, y_pred, k):
+        topk_accuracy = top_k_accuracy_score(y_true, y_pred, k=k)
+        return topk_accuracy
 
 if __name__ == '__main__':
     y_true = ["cat", "ant", "cat", "cat", "ant", "bird"]
@@ -53,9 +58,11 @@ if __name__ == '__main__':
     precision = metric.precision()
     recall = metric.recall()
     f1Score = metric.f1_score()
+    top1_accuracy = metric.accuracy()
     print('acc is : %f' % acc)
     print('precision is :', precision)
     print('recall is :', recall)
     print('f1_score is :', f1Score)
+    print('top1_accuracy is :', top1_accuracy)
 
 
