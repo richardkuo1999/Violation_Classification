@@ -45,15 +45,15 @@ def main(args, device='cpu'):
     #   Det_class = data_dict['Det_names']
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    nc = [len(DriveArea_class), len(Lane_class)]
+    nc = ({'nc':[len(Lane_class),len(DriveArea_class)]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 
 
     # build up model
     print("begin to build up model...")
-    ch = nc[0] + nc[1] +3
-    model = build_model(ch=ch, num_classes=2).to(device)
+    model = build_model(ch=nc['nc'], num_classes=2, 
+                            tokensize=32).to(device)
     
 
     # load weights
