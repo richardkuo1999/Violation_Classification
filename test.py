@@ -98,11 +98,11 @@ def parse_args():
                                             help='dataset yaml path')
     parser.add_argument('--logDir', type=str, default='runs/test',
                             help='log directory')
-    parser.add_argument('--img_size', nargs='+', type=int, default=[224, 224], 
+    parser.add_argument('--img_size', nargs='+', type=int, default=[256, 256], 
                             help='[train, test] image sizes')
     parser.add_argument('--device', default='',
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--weights', type=str, default='weights/last.pth', 
+    parser.add_argument('--weights', type=str, default='weights/epoch-30.pth', 
                                                         help='model.pth path(s)')
     parser.add_argument('--batch_size', type=int, default=15, 
                             help='total batch size for all GPUs')
