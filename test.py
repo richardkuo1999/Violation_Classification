@@ -141,16 +141,16 @@ if __name__ == '__main__':
     # build up model
     print("begin to build up model...")
     ch = hyp['nc'][0] + hyp['nc'][1] +3
-    model = build_model(ch=ch, num_classes=2).to(device)
+    model = build_model(ch=ch, num_classes=2).to(args.device)
     
     # loss function 
-    criterion = Loss(hyp, device)
+    criterion = Loss(hyp).to(args.device)
 
     # load weights
     model_dict = model.state_dict()
     checkpoint_file = args.weights
     print("=> loading checkpoint '{}'".format(checkpoint_file))
-    checkpoint = torch.load(checkpoint_file, map_location= device)
+    checkpoint = torch.load(checkpoint_file, map_location= args.device)
     checkpoint_dict = checkpoint['state_dict']
     # checkpoint_dict = {k: v for k, v in checkpoint['state_dict'].items() if k.split(".")[1] in det_idx_range}
     model_dict.update(checkpoint_dict)
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     model.load_state_dict(model_dict)
     print("=> loaded checkpoint '{}' ".format(checkpoint_file))
 
-    model = model.to(device)
+    model = model.to(args.device)
     model.gr = 1.0
     model.nc = 2
     print('bulid model finished')

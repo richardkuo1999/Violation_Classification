@@ -72,7 +72,7 @@ def main(args, hyp, device, writer):
                             tokensize=32).to(device)
 
     # loss function 
-    criterion = Loss(hyp, device).to(device)
+    criterion = Loss(hyp).to(device)
 
     # Optimizer
     optimizer = get_optimizer(hyp, model)
