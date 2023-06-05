@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from collections import OrderedDict
 
 from models.common import ResidualBlock
 
@@ -51,22 +52,49 @@ class MLPModel(nn.Module):
     
 
 
+from torch.nn import TransformerEncoder, TransformerEncoderLayer
+
+# 定義Transformer模型類別
+class TransformerClassifier(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers, num_heads, dropout):
+        super(TransformerClassifier, self).__init__()
+        self.embedding = nn.Linear(input_dim, hidden_dim)
+        encoder_layers = TransformerEncoderLayer(hidden_dim, num_heads, hidden_dim * 2, dropout)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        x = x.permute(1, 0, 2)
+        output = self.transformer_encoder(x)
+        output = output.mean(dim=0)
+        output = self.fc(output)
+        return output
+    
+
 class ResNetMLPModel(nn.Module):
-    def __init__(self, ch=[25,2], num_classes=2, tokensize=32):
+    def __init__(self, ch=[25,2], num_classes=2, tokensize=32,  
+                        hidden_dim=64, num_layers=2, num_heads=4, dropout=0.2):
         super(ResNetMLPModel, self).__init__()
         self.img_model = ResNet(3, tokensize)
         self.lane_model = ResNet(ch[0], tokensize)
         self.drive_model = ResNet(ch[1], tokensize)
         self.mlp_model = MLPModel(tokensize)
-        self.fc = nn.Linear(tokensize*4, num_classes)  # 將兩個特徵向量合併進行分類
+        self.fc = TransformerClassifier(tokensize, hidden_dim, num_classes, num_layers, num_heads, dropout)
+        # self.fc = nn.Sequential(OrderedDict([
+        #     ('fc1'),  nn.Linear(tokensize*4, num_classes)
+        #     ('relu2', nn.ReLU()),
+        #     ('fc1'),  nn.Linear(tokensize*4, num_classes)
+        # ]))
+
         self.Softmax = nn.Softmax(dim=1)
 
     def forward(self, image, laneline, drivable, bbox):
 
-        image_features = self.img_model(image)
-        laneline_features = self.lane_model(laneline)
-        drivable_features = self.drive_model(drivable)
-        bbox_features = self.mlp_model(bbox)
+        image_features = self.img_model(image).unsqueeze(1)
+        laneline_features = self.lane_model(laneline).unsqueeze(1)
+        drivable_features = self.drive_model(drivable).unsqueeze(1)
+        bbox_features = self.mlp_model(bbox).unsqueeze(1)
         
         combined_features = torch.cat((image_features, laneline_features, 
                             drivable_features, bbox_features), dim=1)

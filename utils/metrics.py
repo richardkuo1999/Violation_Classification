@@ -1,5 +1,6 @@
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, multilabel_confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score,\
+                recall_score, f1_score, multilabel_confusion_matrix, top_k_accuracy_score
 np.seterr(divide='ignore',invalid='ignore')
 
 """
@@ -8,6 +9,7 @@ Mertric   P    N
 P        TP    FN
 N        FP    TN
 """
+# TODO TOP1
 class ClassifyMetric(object):
     def __init__(self, numClass, labels=None):
         self.labels = labels
