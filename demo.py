@@ -22,11 +22,11 @@ from utils.general import colorstr, increment_path, write_log,\
 
 logger = logging.getLogger(__name__)
 
-def detect(model, image, bbox):
+def detect(model, image, laneline, drivable, bbox):
     
     with torch.no_grad():
         
-        outputs = model(image, bbox)
+        outputs = model(image, laneline, drivable, bbox)
         
     return outputs
 
@@ -88,20 +88,29 @@ def main(args, device='cpu'):
 
     # switch to train mode
     model.eval()
-    for batch_i, (image, bbox, paths, shapes) in enumerate(dataset):
-        
+    for batch_i, (input, bbox, paths, shapes) in enumerate(dataset):
+        image, laneline, drivable = input
+
         image = image.to(device, non_blocking=True)
+        laneline = laneline.to(device, non_blocking=True)
+        drivable = drivable.to(device, non_blocking=True)
         bbox = bbox.to(device, non_blocking=True)
         image = image.half() if half else image.float()  # uint8 to fp16/32
+        laneline = laneline.half() if half else bbox.float()  # uint8 to fp16/32
+        drivable = drivable.half() if half else bbox.float()  # uint8 to fp16/32
         bbox = bbox.half() if half else bbox.float()  # uint8 to fp16/32
 
         if image.ndimension() == 3:
             image = image.unsqueeze(0)
+        if laneline.ndimension() == 3:
+            laneline = laneline.unsqueeze(0)
+        if drivable.ndimension() == 3:
+            drivable = drivable.unsqueeze(0)
         if bbox.ndimension() == 1:
             bbox = bbox.unsqueeze(0)
 
         t = time_synchronized()
-        outputs = detect(model, image, bbox)
+        outputs = detect(model, image, laneline, drivable, bbox)
         t_inf = time_synchronized() - t
         T_inf.update(t_inf/image.size(0),image.size(0))
 
@@ -115,7 +124,7 @@ def main(args, device='cpu'):
             for name in namelist[:-1]:
                 imageName += (name+'_')
             imageName = imageName[:-1] + '.jpg'
-            if(namelist[-1] != '0'):
+            if (save_dir / Path(imageName).name).exists():
                 imageName = save_dir / Path(imageName).name
             oriimg = cv2.imread(str(imageName))
             h, w = oriimg.shape[:-1]

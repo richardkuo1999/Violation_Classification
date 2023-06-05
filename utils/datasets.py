@@ -204,6 +204,7 @@ class LoadImages:  # for inference
         self.inputsize = args.img_size
         self.transform = transform
         self.Tensor = transforms.ToTensor()
+        self.device = args.device
         # Data Root
         self.img_root = Path(args.source) / 'images'
         self.DriveArea_root = Path(args.source) / 'DriveArea'
@@ -233,9 +234,9 @@ class LoadImages:  # for inference
         for img_path in tqdm(list(self.img_list)):
             image_path = str(img_path)
             DriveArea_path = image_path.replace(str(self.img_root), 
-                                str(self.DriveArea_root))
+                                str(self.DriveArea_root)).replace(".jpg", ".png")
             lane_path = image_path.replace(str(self.img_root), 
-                                str(self.laneline_root))
+                                str(self.laneline_root)).replace(".jpg", ".png")
             label_path = image_path.replace(str(self.img_root), 
                                 str(self.object_root)).replace(".jpg", ".json")
 
@@ -281,8 +282,8 @@ class LoadImages:  # for inference
 
 
 
-        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info).cpu()
-        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info).cpu()
+        drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device).cpu()
+        lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device).cpu()
 
         # self.segement_debug(img, drivable_label, lane_label, idx, data)
 
