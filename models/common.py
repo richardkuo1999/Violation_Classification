@@ -4,6 +4,25 @@ import torch.nn.functional as F
 from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 
+class Conv2d(nn.Module):
+    """
+    CONV, default activation is ReLU
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding,
+                 dilation=1, groups=1, bias=False, activation=nn.ReLU(inplace=True)):
+        super(Conv2d, self).__init__()
+        layers = [nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
+                            padding=padding, dilation=dilation, groups=groups, bias=bias),
+                  nn.BatchNorm2d(out_channels)]
+        if activation is not None:
+            layers.append(activation)
+        self.seq = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.seq(x)
+    
+
 
 class TransformerClassifier(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers, num_heads, dropout):
@@ -20,3 +39,5 @@ class TransformerClassifier(nn.Module):
         output = output.mean(dim=0)
         output = self.fc(output)
         return output
+    
+

@@ -7,7 +7,7 @@ from fvcore.nn import parameter_count_table
 import sys
 sys.path.append('./')
 
-from models.ResNet import ResNet
+from models.ResNet import ResNet_18 as ResNet
 from models.MLP import MLPModel
 
 
@@ -68,7 +68,7 @@ def get_optimizer(hyp, model):
     
 if __name__ == '__main__':
     model = build_model([3,3], 2, 2).cuda()
-    print(model)
+    # print(model)
 
     # loss function 
     criterion = nn.CrossEntropyLoss()
