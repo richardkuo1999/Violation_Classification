@@ -70,7 +70,7 @@ def main(args, hyp, device, writer):
 
 
     model = build_model(ch=hyp['nc'], num_classes=2, 
-                            tokensize=32).to(device)
+                            tokensize=2).to(device)
 
     # loss function 
     criterion = Loss(hyp).to(device)

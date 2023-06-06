@@ -58,7 +58,7 @@ def test(epoch, args, hyp, val_loader, model, criterion, output_dir,
             loss = criterion(outputs, target)
             losses.update(loss.item(), image.size(0))
         
-        outputs = torch.argmax(outputs, dim=1)
+        outputs = torch.argmax(torch.softmax(outputs, dim=1), dim=1)
         target = torch.argmax(target, dim=1)
         metric.addBatch(outputs.cpu(), target.cpu())
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     # build up model
     print("begin to build up model...")
     model = build_model(ch=hyp['nc'], num_classes=2, 
-                            tokensize=32).to(args.device)
+                            tokensize=2).to(args.device)
     
     # loss function 
     criterion = Loss(hyp).to(args.device)

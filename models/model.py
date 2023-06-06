@@ -21,15 +21,8 @@ class ResNetMLPModel(nn.Module):
         self.drive_model = ResNet(ch[1], tokensize)
         self.mlp_model = MLPModel(tokensize)
         # self.fc = TransformerClassifier(tokensize, hidden_dim, num_classes, num_layers, num_heads, dropout)
-        self.fc = nn.Sequential(OrderedDict([
-            ('fc1', nn.Linear(tokensize*4, 32)),
-            ('relu2', nn.ReLU()),
-            ('fc2', nn.Linear(32, tokensize*4)),
-            ('relu3', nn.ReLU()),
-            ('fc4', nn.Linear(tokensize*4, num_classes))
-        ]))
+        self.fc = nn.Linear(tokensize*4, num_classes)
 
-        self.Softmax = nn.Softmax(dim=1)
 
     def forward(self, image, laneline, drivable, bbox):
 
@@ -42,8 +35,7 @@ class ResNetMLPModel(nn.Module):
                             drivable_features, bbox_features), dim=1)
         
         output = self.fc(combined_features)
-
-        return self.Softmax(output)
+        return output
     
 
 

@@ -54,7 +54,7 @@ def main(args, device='cpu'):
     # build up model
     print("begin to build up model...")
     model = build_model(ch=nc['nc'], num_classes=2, 
-                            tokensize=32).to(device)
+                            tokensize=2).to(device)
     
 
     # load weights
@@ -115,7 +115,7 @@ def main(args, device='cpu'):
         t_inf = time_synchronized() - t
         T_inf.update(t_inf/image.size(0),image.size(0))
 
-        outputs = torch.argmax(outputs, dim=1)
+        outputs = torch.argmax(torch.softmax(outputs, dim=1), dim=1)
         classname = ['violations', 'legitimate']
         cls = outputs.tolist()[0]
         print(f"{paths} result is {classname[cls]}")
