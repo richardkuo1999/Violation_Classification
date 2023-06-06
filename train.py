@@ -235,7 +235,7 @@ def parse_args():
     parser.add_argument('--device', default='', 
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--epochs', type=int, default=500)
-    parser.add_argument('--batch_size', type=int, default=15, 
+    parser.add_argument('--batch_size', type=int, default=5, 
                             help='total batch size for all GPUs')
     parser.add_argument('--workers', type=int, default=0, 
                             help='maximum number of dataloader workers')
