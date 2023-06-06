@@ -2,10 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import OrderedDict
-from torchvision import models
-
-from models.common import ResidualBlock, TransformerClassifier
-
+    
 class ResNet(nn.Module):
   def __init__(self, ch, tokensize=10):
       super(ResNet, self).__init__()
@@ -39,57 +36,24 @@ class ResNet(nn.Module):
         return out
   
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResidualBlock, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels)
+            )
 
-class MLPModel(nn.Module):
-    def __init__(self, tokensize=10):
-        super(MLPModel, self).__init__()
-        self.fc1 = nn.Linear(4, 64)
-        self.fc2 = nn.Linear(64, 256)
-        self.fc3 = nn.Linear(256, 64)
-        self.fc4 = nn.Linear(64, tokensize)
-        
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
-        x = torch.relu(self.fc4(x))
-        return x
-    
-
-
-
-    
-
-class ResNetMLPModel(nn.Module):
-    def __init__(self, ch=[25,2], num_classes=2, tokensize=32,  
-                        hidden_dim=64, num_layers=2, num_heads=4, dropout=0.2):
-        super(ResNetMLPModel, self).__init__()
-        
-        self.img_model = ResNet(3, tokensize)
-        self.lane_model = ResNet(ch[0], tokensize)
-        self.drive_model = ResNet(ch[1], tokensize)
-        self.mlp_model = MLPModel(tokensize)
-        # self.fc = TransformerClassifier(tokensize, hidden_dim, num_classes, num_layers, num_heads, dropout)
-        self.fc = nn.Sequential(OrderedDict([
-            ('fc1', nn.Linear(tokensize*4, 32)),
-            ('relu2', nn.ReLU()),
-            ('fc2', nn.Linear(32, tokensize*4)),
-            ('relu3', nn.ReLU()),
-            ('fc4', nn.Linear(tokensize*4, num_classes))
-        ]))
-
-        self.Softmax = nn.Softmax(dim=1)
-
-    def forward(self, image, laneline, drivable, bbox):
-
-        image_features = self.img_model(image)
-        laneline_features = self.lane_model(laneline)
-        drivable_features = self.drive_model(drivable)
-        bbox_features = self.mlp_model(bbox)
-        
-        combined_features = torch.cat((image_features, laneline_features, 
-                            drivable_features, bbox_features), dim=1)
-        
-        output = self.fc(combined_features)
-
-        return self.Softmax(output)
+        residual = x
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out += self.shortcut(residual)
+        out = F.relu(out)
+        return out
