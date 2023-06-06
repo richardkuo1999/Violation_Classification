@@ -155,21 +155,15 @@ class MyDataset(Dataset):
         img = self.transform(img)
         drivable_label = self.Tensor(drivable_label)
         lane_label = self.Tensor(lane_label)
-        input = (img, lane_label, drivable_label)
 
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
-        return input, data["xywh"], data["label"], data["image"], shapes
+        return img, lane_label, drivable_label, data["xywh"], data["label"], data["image"], shapes
 
 
     # TODO collate_fn
     @staticmethod
     def collate_fn(batch):
-        input, bbox, target, paths, shapes= zip(*batch)
-        image, lane, drivable = [], [], []
-        for  l in input:
-            image.append(l[0])
-            lane.append(l[1])
-            drivable.append(l[2])
+        image, lane, drivable, bbox, target, paths, shapes= zip(*batch)
         return [torch.stack(image, 0), torch.stack(lane, 0), torch.stack(drivable, 0)], \
                             torch.stack(bbox, 0), torch.stack(target, 0), paths, shapes
 
@@ -257,19 +251,18 @@ class LoadImages:  # for inference
         img = self.transform(img)
         drivable_label = self.Tensor(drivable_label)
         lane_label = self.Tensor(lane_label)
-        input = (img, lane_label, drivable_label)
-
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         bbox = data["xywh"]
 
-        return input, bbox, data["image"], shapes
+        return img, lane_label, drivable_label, bbox, data["image"], shapes
 
 
     # TODO collate_fn
     @staticmethod
     def collate_fn(batch):
-        input, bbox, paths, shapes= zip(*batch) 
-        return torch.stack(input, 0), torch.stack(bbox, 0), paths, shapes
+        image, lane, drivable, bbox, paths, shapes= zip(*batch)
+        return [torch.stack(image, 0), torch.stack(lane, 0), torch.stack(drivable, 0)], \
+                            torch.stack(bbox, 0), paths, shapes
 
 
 
