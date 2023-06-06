@@ -45,7 +45,8 @@ def main(args, device='cpu'):
     #   Det_class = data_dict['Det_names']
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    nc = ({'nc':[len(Lane_class),len(DriveArea_class)]})
+    # nc = ({'nc':[len(Lane_class),len(DriveArea_class)]})
+    nc = ({'nc':[3,3]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 

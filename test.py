@@ -133,7 +133,8 @@ if __name__ == '__main__':
 
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
+    # hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
+    hyp.update({'nc':[3,3]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 

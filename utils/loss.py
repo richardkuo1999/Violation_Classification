@@ -11,9 +11,9 @@ class Loss(nn.Module):
         
         self.hyp = hyp
         self.nc = hyp['nc']
-        weight = torch.tensor([1.5,0.5])
-        self.losses = nn.CrossEntropyLoss(weight=weight)
+        weight = torch.tensor([1,2])
         # self.losses = nn.CrossEntropyLoss()
+        self.losses = nn.CrossEntropyLoss(weight=weight)
         # self.losses = nn.BCEWithLogitsLoss()
         # self.losses = nn.BCEWithLogitsLoss(pos_weight=weight)
         

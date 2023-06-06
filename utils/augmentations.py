@@ -168,15 +168,15 @@ def letterbox(combination, new_shape=(640, 640), color=(114, 114, 114), auto=Fal
 
     if shape[::1] != new_unpad:  # resize
         img = cv2.resize(img, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
-        seg_label = Resize(new_unpad,InterpolationMode.BILINEAR, antialias=True)(seg_label)
-        lane_label = Resize(new_unpad,InterpolationMode.BILINEAR, antialias=True)(lane_label)
+        seg_label = cv2.resize(seg_label, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
+        lane_label = cv2.resize(lane_label, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
 
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
 
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
-    seg_label = F.pad(seg_label, (left, right, top, bottom), value=0)  # add border
-    lane_label = F.pad(lane_label, (left, right, top, bottom), value=0)  # add border
+    seg_label = cv2.copyMakeBorder(seg_label, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0,0,0))  # add border
+    lane_label = cv2.copyMakeBorder(lane_label, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0,0,0))  # add border
     # print(img.shape)
     
     combination = (img, seg_label, lane_label)
