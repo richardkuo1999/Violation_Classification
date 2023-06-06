@@ -27,7 +27,7 @@ def get_optimizer(hyp, model):
     return optimizer
 
 if __name__ == '__main__':
-  model = build_model([25,2], 2, 32).cuda()
+  model = build_model([3,3], 2, 2).cuda()
 
   # loss function 
   criterion = nn.CrossEntropyLoss()
@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
 
   image = torch.randn((15, 3, 256, 256)).cuda()
-  laneline = torch.randn((15, 25, 256, 256)).cuda()
-  drivable = torch.randn((15, 2, 256, 256)).cuda()
+  laneline = torch.randn((15, 3, 256, 256)).cuda()
+  drivable = torch.randn((15, 3, 256, 256)).cuda()
   bbox = torch.randn((15, 4), dtype=torch.float32).cuda()
 
   # 設定目標標籤
