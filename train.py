@@ -234,14 +234,14 @@ def parse_args():
                             help='log directory')
     parser.add_argument('--device', default='', 
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--epochs', type=int, default=500)
-    parser.add_argument('--batch_size', type=int, default=5, 
+    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--batch_size', type=int, default=16, 
                             help='total batch size for all GPUs')
     parser.add_argument('--workers', type=int, default=0, 
                             help='maximum number of dataloader workers')
     parser.add_argument('--val_start', type=int, default=0, 
                             help='start do validation')
-    parser.add_argument('--val_freq', type=int, default=5, 
+    parser.add_argument('--val_freq', type=int, default=1, 
                             help='How many epochs do one time validation')
 
     parser.add_argument('--img_size', nargs='+', type=int, default=[256, 256], 
