@@ -11,10 +11,10 @@ from models.ResNet import ResNet_18 as ResNet
 from models.MLP import MLPModel
 
 
-class ResNetMLPModel(nn.Module):
+class ResNetMLPModel_Merge(nn.Module):
     def __init__(self, ch=[25,2], num_classes=2, tokensize=32,  
                         hidden_dim=64, num_layers=2, num_heads=4, dropout=0.2):
-        super(ResNetMLPModel, self).__init__()
+        super(ResNetMLPModel_Merge, self).__init__()
         
         self.img_model = ResNet(3, tokensize)
         self.lane_model = ResNet(ch[0], tokensize)
@@ -37,11 +37,31 @@ class ResNetMLPModel(nn.Module):
         output = self.fc(combined_features)
         return output
     
+class ResNetMLPModel_Split(nn.Module):
+    def __init__(self, ch=[25,2], num_classes=2, tokensize=32):
+        super(ResNetMLPModel_Split, self).__init__()
+        ch = 3 + sum(ch)
+        self.model = ResNet(ch, tokensize)
+        self.mlp_model = MLPModel(tokensize)
+        self.fc = nn.Linear(tokensize*2, num_classes)
 
+    def forward(self, image, laneline, drivable, bbox):
+        input = torch.cat((image, laneline,drivable), dim=1)
+        image_features = self.model(input)
+        bbox_features = self.mlp_model(bbox)
+        
+        combined_features = torch.cat((image_features, bbox_features), dim=1)
+        
+        output = self.fc(combined_features)
 
-def build_model(ch=[2,25], num_classes=2, tokensize=32):
-            
-    model = ResNetMLPModel(ch ,num_classes, tokensize)
+        return output
+
+def build_model(ch=[2,25], num_classes=2, tokensize=32, split=False):
+    if split:
+        model = ResNetMLPModel_Split(ch ,num_classes, tokensize)
+    else:
+        model = ResNetMLPModel_Merge(ch ,num_classes, tokensize)
+
     print(parameter_count_table(model))
     return model
 
@@ -59,7 +79,7 @@ def get_optimizer(hyp, model):
 
     
 if __name__ == '__main__':
-    model = build_model([3,3], 2, 2).cuda()
+    model = build_model([3,3], 2, 2, True).cuda()
     # print(model)
 
     # loss function 

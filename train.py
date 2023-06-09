@@ -74,7 +74,7 @@ def main(args, hyp, device, writer):
 
 
     model = build_model(ch=hyp['nc'], num_classes=2, 
-                            tokensize=2).to(device)
+                            tokensize=2, split=args.useSplitModel).to(device)
 
     # loss function 
     criterion = Loss(hyp).to(device)
@@ -234,6 +234,9 @@ def parse_args():
                             # yolop_backbone
     parser.add_argument('--DoOneHot', type=bool, default=False, 
                                             help='do one hot or not')
+    parser.add_argument('--useSplitModel', type=bool, default=False, 
+                                            help='do one hot or not')
+    
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
     parser.add_argument('--logDir', type=str, default='runs/train',
