@@ -13,6 +13,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
 
+from utils.general import one_hot_it_v11_dice
 from utils.augmentations import letterbox
 
 def create_dataloader(args, hyp, data_dict, batch_size, normalize, is_train=True, shuffle=True):
@@ -60,6 +61,7 @@ class MyDataset(Dataset):
         None
         """
         self.hyp = hyp
+        self.DoOneHot = args.DoOneHot
         self.is_train = is_train
         self.device = args.device
         self.transform = transform
@@ -148,17 +150,38 @@ class MyDataset(Dataset):
                                          resized_shape, auto=False, scaleup=self.is_train)
         h, w = img.shape[:2]
 
-
-
-
-
+        if self.DoOneHot:
+            drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info)
+            lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info)
+            # self.segement_debug(img, drivable_label, lane_label, idx, data)
+            drivable_label = torch.tensor(drivable_label)
+            lane_label = torch.tensor(lane_label)
+        else:
+            drivable_label = self.Tensor(drivable_label)
+            lane_label = self.Tensor(lane_label)
         img = self.transform(img)
-        drivable_label = self.Tensor(drivable_label)
-        lane_label = self.Tensor(lane_label)
-
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
-        return img, lane_label, drivable_label, data["xywh"], data["label"], data["image"], shapes
+        return img, lane_label, drivable_label, data["xywh"], data["label"], data["image"], shapes 
+    
+    def segement_debug(self, img, drivable_label, lane_label, idx, data):
+        from PIL import Image
+        # aaa = img.copy()
+        aaa = np.zeros(img.shape,dtype=img.dtype)
+        drivable_label_bool = drivable_label.copy().astype(dtype=bool)
+        for i in range(1,len(drivable_label_bool)):
+            aaa[drivable_label_bool[i,:,:]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
 
+        lane_label_bool = lane_label.copy().astype(dtype=bool)
+        for i in range(1,len(lane_label_bool)):
+            aaa[lane_label_bool[i,:,:]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
+        aaa = cv2.cvtColor(aaa, cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(f'runs/{idx}.png',aaa)
+        cv2.imwrite(f'runs/{idx}_.png',img)
+        print(data["image"])
+        print(data["DriveArea"])
+        print(data["lane"])
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # TODO collate_fn
     @staticmethod
@@ -175,6 +198,7 @@ class LoadImages:  # for inference
         self.transform = transform
         self.Tensor = transforms.ToTensor()
         self.device = args.device
+        self.DoOneHot = args.DoOneHot
         # Data Root
         self.img_root = Path(args.source) / 'images'
         self.DriveArea_root = Path(args.source) / 'DriveArea'
@@ -247,15 +271,41 @@ class LoadImages:  # for inference
                                          resized_shape, auto=False)
         h, w = img.shape[:2]
 
+        if self.DoOneHot:
+            drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device)
+            lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device)
+            # self.segement_debug(img, drivable_label, lane_label, idx, data)
+            drivable_label = torch.tensor(drivable_label)
+            lane_label = torch.tensor(lane_label)
+        else:
+            drivable_label = self.Tensor(drivable_label)
+            lane_label = self.Tensor(lane_label)
 
         img = self.transform(img)
-        drivable_label = self.Tensor(drivable_label)
-        lane_label = self.Tensor(lane_label)
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         bbox = data["xywh"]
 
         return img, lane_label, drivable_label, bbox, data["image"], shapes
 
+    def segement_debug(self, img, drivable_label, lane_label, idx, data):
+        from PIL import Image
+        # aaa = img.copy()
+        aaa = np.zeros(img.shape,dtype=img.dtype)
+        drivable_label_bool = drivable_label.copy().astype(dtype=bool)
+        for i in range(1,len(drivable_label_bool)):
+            aaa[drivable_label_bool[i,:,:]] = self.label_drivable_info[list(self.label_drivable_info)[i]][:3]
+
+        lane_label_bool = lane_label.copy().astype(dtype=bool)
+        for i in range(1,len(lane_label_bool)):
+            aaa[lane_label_bool[i,:,:]] = self.label_Lane_info[list(self.label_Lane_info)[i]][:3]
+        aaa = cv2.cvtColor(aaa, cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(f'runs/{idx}.png',aaa)
+        cv2.imwrite(f'runs/{idx}_.png',img)
+        print(data["image"])
+        print(data["DriveArea"])
+        print(data["lane"])
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # TODO collate_fn
     @staticmethod

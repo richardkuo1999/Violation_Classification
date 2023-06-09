@@ -168,8 +168,8 @@ def letterbox(combination, new_shape=(640, 640), color=(114, 114, 114), auto=Fal
 
     if shape[::1] != new_unpad:  # resize
         img = cv2.resize(img, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
-        seg_label = cv2.resize(seg_label, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
-        lane_label = cv2.resize(lane_label, new_unpad[::-1], interpolation=cv2.INTER_LINEAR)
+        seg_label = cv2.resize(seg_label, new_unpad[::-1], interpolation=cv2.INTER_NEAREST)
+        lane_label = cv2.resize(lane_label, new_unpad[::-1], interpolation=cv2.INTER_NEAREST)
 
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))

@@ -53,10 +53,14 @@ def main(args, hyp, device, writer):
         data_dict = yaml.load(f, Loader=yaml.SafeLoader)  # data dict
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    # hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
-    hyp.update({'nc':[3,3]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
+
+    if args.DoOneHot:
+        hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
+    else:
+        hyp.update({'nc':[3,3]})
+        
 
 
     # Save run settings(hyp, args)
@@ -228,6 +232,8 @@ def parse_args():
                             default='hyp/hyp.scratch.yolop.yaml', 
                             help='hyperparameter path')
                             # yolop_backbone
+    parser.add_argument('--DoOneHot', type=bool, default=False, 
+                                            help='do one hot or not')
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
     parser.add_argument('--logDir', type=str, default='runs/train',
