@@ -11,10 +11,10 @@ from models.ResNet import ResNet_18 as ResNet
 from models.MLP import MLPModel
 
 
-class ResNetMLPModel_Merge(nn.Module):
+class ResNetMLPModel_Split(nn.Module):
     def __init__(self, ch=[25,2], num_classes=2, tokensize=32,  
                         hidden_dim=64, num_layers=2, num_heads=4, dropout=0.2):
-        super(ResNetMLPModel_Merge, self).__init__()
+        super(ResNetMLPModel_Split, self).__init__()
         
         self.img_model = ResNet(3, tokensize)
         self.lane_model = ResNet(ch[0], tokensize)
@@ -37,9 +37,9 @@ class ResNetMLPModel_Merge(nn.Module):
         output = self.fc(combined_features)
         return output
     
-class ResNetMLPModel_Split(nn.Module):
+class ResNetMLPModel_Merge(nn.Module):
     def __init__(self, ch=[25,2], num_classes=2, tokensize=32):
-        super(ResNetMLPModel_Split, self).__init__()
+        super(ResNetMLPModel_Merge, self).__init__()
         ch = 3 + sum(ch)
         self.model = ResNet(ch, tokensize)
         self.mlp_model = MLPModel(tokensize)
