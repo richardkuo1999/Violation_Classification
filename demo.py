@@ -45,16 +45,18 @@ def main(args, device='cpu'):
     #   Det_class = data_dict['Det_names']
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    # nc = ({'nc':[len(Lane_class),len(DriveArea_class)]})
-    nc = ({'nc':[3,3]})
+    if args.DoOneHot:
+        nc = {'nc':[len(Lane_class),len(DriveArea_class)]}
+    else:
+        nc = {'nc':[3,3]}
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 
 
     # build up model
     print("begin to build up model...")
-    model = build_model(ch=nc['nc'], num_classes=2, 
-                            tokensize=2).to(device)
+    model = build_model(ch=nc['nc'], num_classes=2, tokensize=args.tokensize,
+                            split=args.useSplitModel).to(device)
     
 
     # load weights
@@ -149,17 +151,24 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test Multitask network')
     parser.add_argument('--hyp', type=str, default='hyp/hyp.scratch.yolop.yaml', 
                             help='hyperparameter path')
+    parser.add_argument('--DoOneHot', type=bool, default=False, 
+                                            help='do one hot or not')
+    parser.add_argument('--useSplitModel', type=bool, default=False, 
+                                            help='do one hot or not')
+    
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
+    parser.add_argument('--tokensize', type=int, default=2, 
+                                            help='size of the tokens')
     parser.add_argument('--logDir', type=str, default='runs/demo',
                             help='log directory')
     parser.add_argument('--source', type=str, default='./inference/val', 
                                                     help='source')  
-    parser.add_argument('--img_size', nargs='+', type=int, default=[224, 224], 
+    parser.add_argument('--img_size', nargs='+', type=int, default=[256, 256], 
                             help='[train, test] image sizes')
     parser.add_argument('--device', default='',
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--weights', type=str, default='weights/last.pth', 
+    parser.add_argument('--weights', type=str, default='weights/t2.pth', 
                                                     help='model.pth path(s)')
     parser.add_argument('--draw', type=bool, default=True, 
                                                     help='draw result')

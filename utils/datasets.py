@@ -272,8 +272,8 @@ class LoadImages:  # for inference
         h, w = img.shape[:2]
 
         if self.DoOneHot:
-            drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info, self.device)
-            lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info, self.device)
+            drivable_label = one_hot_it_v11_dice(drivable_label, self.label_drivable_info)
+            lane_label = one_hot_it_v11_dice(lane_label, self.label_Lane_info)
             # self.segement_debug(img, drivable_label, lane_label, idx, data)
             drivable_label = torch.tensor(drivable_label)
             lane_label = torch.tensor(lane_label)
@@ -285,7 +285,7 @@ class LoadImages:  # for inference
         shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
         bbox = data["xywh"]
 
-        return img, lane_label, drivable_label, bbox, data["image"], shapes
+        return [img, lane_label, drivable_label], bbox, data["image"], shapes
 
     def segement_debug(self, img, drivable_label, lane_label, idx, data):
         from PIL import Image
