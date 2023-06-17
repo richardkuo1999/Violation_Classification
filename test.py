@@ -94,6 +94,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test Multitask network')
     parser.add_argument('--hyp', type=str, default='hyp/hyp.scratch.yolop.yaml', 
                             help='hyperparameter path')
+    parser.add_argument('--DoOneHot', type=bool, default=False, 
+                                            help='do one hot or not')
+    parser.add_argument('--useSplitModel', type=bool, default=False, 
+                                            help='do one hot or not')
+    
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
     parser.add_argument('--logDir', type=str, default='runs/test',
@@ -102,7 +107,7 @@ def parse_args():
                             help='[train, test] image sizes')
     parser.add_argument('--device', default='',
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--weights', type=str, default='weights/epoch-30.pth', 
+    parser.add_argument('--weights', type=str, default='weights/epoch-26.pth', 
                                                         help='model.pth path(s)')
     parser.add_argument('--batch_size', type=int, default=15, 
                             help='total batch size for all GPUs')
@@ -133,8 +138,10 @@ if __name__ == '__main__':
 
     DriveArea_class = data_dict['DriveArea_names']
     Lane_class = data_dict['Lane_names']
-    # hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
-    hyp.update({'nc':[3,3]})
+    if args.DoOneHot:
+        hyp.update({'nc':[len(Lane_class),len(DriveArea_class)]})
+    else:
+        hyp.update({'nc':[3,3]})
     logger.info(f"{colorstr('DriveArea_class: ')}{DriveArea_class}")
     logger.info(f"{colorstr('Lane_class: ')}{Lane_class}")
 
