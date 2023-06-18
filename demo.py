@@ -16,7 +16,7 @@ from utils.datasets import LoadImages
 from utils.torch_utils import select_device, time_synchronized
 from utils.plot import plot_one_box
 from utils.general import colorstr, increment_path, write_log,\
-                        AverageMeter, xywhn2xyxy
+                        AverageMeter, xywhn2xyxy, OpCounter
 
 
 
@@ -70,8 +70,6 @@ def main(args, device='cpu'):
     print('bulid model finished')
 
 
-    epoch = checkpoint['epoch'] #special for test
-
     # Data loading
     print("begin to load data")
     normalize = transforms.Normalize(
@@ -83,7 +81,8 @@ def main(args, device='cpu'):
     dataset = LoadImages(args, data_dict, transform)
     print('load data finished')
 
-
+    
+       
     # Run inference
     t0 = time.time()
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(2)]
@@ -135,9 +134,32 @@ def main(args, device='cpu'):
             plot_one_box(xyxy, oriimg , label=classname[cls], color=colors[int(cls)], line_thickness=2)
             cv2.imwrite(str(save_dir / Path(imageName).name),oriimg)
 
+    # calculate macs, params, flops, parameter count
+    img = torch.rand(3, 256, 256).to(device)
+    if args.DoOneHot:
+        laneline = torch.rand(25, 256, 256).to(device)
+        drivable = torch.rand(2, 256, 256).to(device)
+    else:
+        laneline = torch.rand(3, 256, 256).to(device)
+        drivable = torch.rand(3, 256, 256).to(device)
+    bbox = torch.rand(1,4).to(device)
 
+    img = img.half() if half else img.float()  # uint8 to fp16/32
+    laneline = laneline.half() if half else laneline.float()  # uint8 to fp16/32
+    drivable = drivable.half() if half else drivable.float()  # uint8 to fp16/32
+    bbox = bbox.half() if half else bbox.float()  # uint8 to fp16/32
+    if img.ndimension() == 3:
+        img = img.unsqueeze(0)
+    if laneline.ndimension() == 3:
+        laneline = laneline.unsqueeze(0)
+    if drivable.ndimension() == 3:
+        drivable = drivable.unsqueeze(0)
+    if bbox.ndimension() == 1:
+        bbox = bbox.unsqueeze(0)
 
-
+    OpCounter(img, laneline, drivable, bbox, model, 
+              results_file, split=args.useSplitModel)
+    
     msg = f'{str(args.weights)}\n'+\
           f'Results saved to {str(args.save_dir)}\n'+\
           f'Done. ({(time.time() - t0)} s)\n'+\
@@ -151,14 +173,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test Multitask network')
     parser.add_argument('--hyp', type=str, default='hyp/hyp.scratch.yolop.yaml', 
                             help='hyperparameter path')
-    parser.add_argument('--DoOneHot', type=bool, default=False, 
+    parser.add_argument('--DoOneHot', type=bool, default=True, 
                                             help='do one hot or not')
     parser.add_argument('--useSplitModel', type=bool, default=False, 
                                             help='do one hot or not')
     
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
-    parser.add_argument('--tokensize', type=int, default=2, 
+    parser.add_argument('--tokensize', type=int, default=32, 
                                             help='size of the tokens')
     parser.add_argument('--logDir', type=str, default='runs/demo',
                             help='log directory')
@@ -168,9 +190,9 @@ def parse_args():
                             help='[train, test] image sizes')
     parser.add_argument('--device', default='',
                             help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--weights', type=str, default='weights/t2.pth', 
+    parser.add_argument('--weights', type=str, default='weights/MO.pth', 
                                                     help='model.pth path(s)')
-    parser.add_argument('--draw', type=bool, default=True, 
+    parser.add_argument('--draw', type=bool, default=False, 
                                                     help='draw result')
     return parser.parse_args()
 

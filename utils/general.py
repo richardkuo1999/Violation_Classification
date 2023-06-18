@@ -8,6 +8,11 @@ import logging
 import numpy as np
 from pathlib import Path
 
+import pandas as pd
+from thop import profile
+from torchstat import stat
+from fvcore.nn import FlopCountAnalysis, parameter_count_table, flop_count_table
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -110,3 +115,55 @@ def xywhn2xyxy(x, w=640, h=640, padw=0, padh=0):
     y[:, 2] = w * (x[:, 0] + x[:, 2] / 2) + padw  # bottom right x
     y[:, 3] = h * (x[:, 1] + x[:, 3] / 2) + padh  # bottom right y
     return y
+
+def value_to_float(x):
+    if type(x) == float or type(x) == int or not x:
+        return x
+    if 'K' == x[-1]:
+        if len(x) > 1:
+            return float(x.replace('K', '')) * 1000
+        return 1000.0
+    if 'M' == x[-1]:
+        if len(x) > 1:
+            return float(x.replace('M', '')) * 1000000
+        return 1000000.0
+    if 'G' == x[-1]:
+        return float(x.replace('G', '')) * 1000000000
+    return x
+
+def OpCounter(img, laneline, drivable, bbox, model, results_file, split):
+    """get macs, params, flops, parameter count
+
+    Args:
+        img (torch.Tensor): Test data
+        model (models): Test model
+        results_file (pathlib): save resuslt
+    """
+
+    macs, params = profile(model, inputs=(img, laneline, drivable, bbox))  # ,verbose=False
+
+    write_log(results_file, f"FLOPs: {macs}")
+    write_log(results_file, f"MACs: {macs*2}")
+    write_log(results_file, f"params: {params}")
+
+    # stat(model, (img, laneline, drivable, bbox))
+    # flops = FlopCountAnalysis(model, (img, laneline, drivable, bbox))
+    # write_log(results_file, f"FLOPs: {flops.total()}")
+
+    # write results to csv
+    # def write_csv(fileName, table):
+    #     parameter_data = table.split('\n')
+
+    #     data = {}
+    #     for i, index in enumerate(parameter_data[0].split('|')[1:-1], start=1):
+    #         data[index.strip(' ')] = [value_to_float(line.split('|')[i].strip(' ')) for line in parameter_data[2:]]
+
+    #     myvar = pd.DataFrame(data)
+    #     myvar.to_csv(str(results_file).replace("results.txt",fileName))
+
+
+    # parameter_table = parameter_count_table(model)
+    # write_csv("parameter.csv", parameter_table)
+    
+    # flop_table = flop_count_table(flops)
+    # write_csv("flop.csv", flop_table)
