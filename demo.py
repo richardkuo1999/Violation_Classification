@@ -85,7 +85,7 @@ def main(args, device='cpu'):
        
     # Run inference
     t0 = time.time()
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(2)]
+    colors = [(255,255,0), (0,255,255)]
     T_inf = AverageMeter()
 
     # switch to train mode
@@ -131,7 +131,7 @@ def main(args, device='cpu'):
             oriimg = cv2.imread(str(imageName))
             h, w = oriimg.shape[:-1]
             xyxy = xywhn2xyxy(bbox, w, h)[0]
-            plot_one_box(xyxy, oriimg , label=classname[cls], color=colors[int(cls)], line_thickness=2)
+            plot_one_box(xyxy, oriimg , label=classname[cls], color=colors[int(cls)], line_thickness=4)
             cv2.imwrite(str(save_dir / Path(imageName).name),oriimg)
 
     # calculate macs, params, flops, parameter count
