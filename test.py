@@ -101,6 +101,8 @@ def parse_args():
     
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
+    parser.add_argument('--tokensize', type=int, default=32, 
+                                            help='size of the tokens')
     parser.add_argument('--logDir', type=str, default='runs/test',
                             help='log directory')
     parser.add_argument('--img_size', nargs='+', type=int, default=[256, 256], 
@@ -149,7 +151,7 @@ if __name__ == '__main__':
     # build up model
     print("begin to build up model...")
     model = build_model(ch=hyp['nc'], num_classes=2, 
-                            tokensize=2).to(args.device)
+                            tokensize=args.tokensize).to(args.device)
     
     # loss function 
     criterion = Loss(hyp).to(args.device)

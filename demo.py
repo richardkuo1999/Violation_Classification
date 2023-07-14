@@ -193,7 +193,7 @@ def parse_args():
     parser.add_argument('--weights', type=str, default='weights/MO.pth', 
                                                     help='model.pth path(s)')
     parser.add_argument('--draw', type=bool, default=False, 
-                                                    help='draw result')
+                                                    help='save the Predict result ')
     return parser.parse_args()
 
 

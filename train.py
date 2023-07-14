@@ -74,7 +74,7 @@ def main(args, hyp, device, writer):
 
 
     model = build_model(ch=hyp['nc'], num_classes=2, 
-                            tokensize=2, split=args.useSplitModel).to(device)
+                            tokensize=args.tokensize, split=args.useSplitModel).to(device)
 
     # loss function 
     criterion = Loss(hyp).to(device)
@@ -235,8 +235,10 @@ def parse_args():
     parser.add_argument('--DoOneHot', type=bool, default=False, 
                                             help='do one hot or not')
     parser.add_argument('--useSplitModel', type=bool, default=False, 
-                                            help='do one hot or not')
-    
+                                            help='use multi resnet do feature extract')
+
+    parser.add_argument('--tokensize', type=int, default=32, 
+                                        help='size of the tokens')
     parser.add_argument('--data', type=str, default='data/multi.yaml', 
                                             help='dataset yaml path')
     parser.add_argument('--logDir', type=str, default='runs/train',
