@@ -1,7 +1,7 @@
 # Multi-task-learning-for-road-perception
 
 ## Datasets
-  - [Our dataset](./dataset/)
+  - [Our dataset](https://drive.google.com/drive/folders/1S4XyyC9LbPZ8GwEH9fwWvNxKMKPA28bZ?usp=sharing)
 
   Train
   ```
@@ -27,6 +27,8 @@
                     - oriimg - ....jpg 
              
   ```
+## Weight 
+  Download from [here](https://drive.google.com/file/d/1qaYYTDYY_wXv5YnRQ6MbrWRLeyv4CVVA/view?usp=sharing)
 
 ## Requirement
   This codebase has been developed with
@@ -41,7 +43,7 @@
   ```
 
 ## main command
-  You can change the data use, Path, and Classes, and merge some classes from [here](/data).
+  You can change the data use, Path, and Classes from [here](/data).
 
   ### Train
   ```shell
