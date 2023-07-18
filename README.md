@@ -25,8 +25,11 @@
                     | laneline - ....png
                     | object - ....json
                     - oriimg - ....jpg 
-             
+
   ```
+  If you want to use your data here have some tools: 
+  - [From GoPro video get GPS and image](./tool/get_GPS_and_images/)
+  - [Cut the vehicle from the origin image size](./tool/get_GPS_and_images/)
 ## Weight 
   Download from [here](https://drive.google.com/file/d/1qaYYTDYY_wXv5YnRQ6MbrWRLeyv4CVVA/view?usp=sharing)
 
